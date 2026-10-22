@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weekly Trend - TanavDrishti</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <span class="logo"><a href="/">TanavDrishti</a></span>
+    <a href="/">Home</a>
+  </nav>
+
+  <div class="container">
+    <h2>Your Weekly Risk Trend</h2>
+    <p class="subtitle">0 = Low &nbsp;|&nbsp; 1 = Medium &nbsp;|&nbsp; 2 = High</p>
+
+    {% if dates %}
+    <div class="chart-wrap" style="padding: 1rem;">
+      <canvas id="trendChart" style="max-height: 300px;"></canvas>
+    </div>
+    <script>
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: {{ dates | tojson }},
+          datasets: [{
+            label: 'Risk Level',
+            data: {{ levels | tojson }},
+            borderColor: '#2D6A4F',
+            backgroundColor: 'rgba(45,106,79,0.1)',
+            borderWidth: 3,
+            pointBackgroundColor: '#2D6A4F',
+            pointRadius: 6,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: { size: 10 },
+                maxRotation: 45,
+                minRotation: 30
+              }
+            },
+            y: {
+              min: 0, max: 2,
+              ticks: {
+                stepSize: 1,
+                font: { size: 11 },
+                callback: v => ['Low','Medium','High'][v]
+              }
+            }
+          }
+        }
+      });
+    </script>
+    {% else %}
+    <p style="text-align:center; margin-top:3rem; color:#666;">
+      No data yet. Fill the form first to see your trend.
+    </p>
+    {% endif %}
+
+    <div style="text-align:center; margin-top:2rem;">
+      <a href="/" class="btn">Go Back</a>
+    </div>
+  </div>
+</body>
+</html>

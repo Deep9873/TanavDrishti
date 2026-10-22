@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TanavDrishti - Student Mental Health</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <span class="logo"><a href="/">TanavDrishti</a></span>
+    <div class="nav-right">
+      <a href="/trend">Weekly Trend</a>
+
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Student Mental Health Risk Detector</h1>
+    <p class="subtitle">Answer a few questions about your daily habits - takes less than 2 minutes</p>
+
+    <!-- Progress Bar -->
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <p class="progress-label" id="progressLabel">Fill the form to begin</p>
+
+    <form action="/predict" method="POST" class="form-card" id="mainForm">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>😴 Sleep Hours (per night)</label>
+          <input type="number" name="sleep" min="1" max="12" step="0.5" placeholder="e.g. 6" required>
+        </div>
+        <div class="form-group">
+          <label>📚 Study Hours (per day)</label>
+          <input type="number" name="study" min="0" max="16" step="0.5" placeholder="e.g. 4" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>📱 Social Media Hours (per day)</label>
+          <input type="number" name="social_media" min="0" max="12" step="0.5" placeholder="e.g. 3" required>
+        </div>
+        <div class="form-group">
+          <label>🏃 Physical Activity Hours (per day)</label>
+          <input type="number" name="physical" min="0" max="8" step="0.5" placeholder="e.g. 1" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>🏫 Attendance (%)</label>
+          <input type="number" name="attendance" min="0" max="100" step="1" placeholder="e.g. 75" required>
+        </div>
+        <div class="form-group">
+          <label>⚧ Gender</label>
+          <select name="gender" required>
+            <option value="">Select</option>
+            <option value="1">Male</option>
+            <option value="0">Female</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>🎓 Academic Pressure &nbsp;<span class="slider-val" id="acad_val">5</span>/10</label>
+        <input type="range" name="acad_pressure" min="1" max="10" value="5"
+               oninput="document.getElementById('acad_val').textContent=this.value; updateProgress()">
+        <div class="slider-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+      </div>
+
+      <div class="slider-group">
+        <label>💸 Financial Stress &nbsp;<span class="slider-val" id="fin_val">5</span>/10</label>
+        <input type="range" name="fin_stress" min="1" max="10" value="5"
+               oninput="document.getElementById('fin_val').textContent=this.value; updateProgress()">
+        <div class="slider-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+      </div>
+
+      <div class="slider-group">
+        <label>👥 Social Interaction &nbsp;<span class="slider-val" id="social_val">5</span>/10</label>
+        <input type="range" name="social_int" min="1" max="10" value="5"
+               oninput="document.getElementById('social_val').textContent=this.value; updateProgress()">
+        <div class="slider-labels"><span>Very Isolated</span><span>Moderate</span><span>Very Social</span></div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">
+        <span id="btnText">Check My Risk Level →</span>
+        <span id="btnSpinner" style="display:none">Analyzing... ⏳</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Chatbot -->
+  <div class="chat-hint" onclick="toggleChat()">💬 Need help? Chat with TanavBot</div>
+  <div class="chat-bubble" onclick="toggleChat()">💬</div>
+
+  <div class="chat-box" id="chatBox">
+    <div class="chat-header">
+      <span>🤖 TanavBot - Mental Health Assistant</span>
+      <span onclick="toggleChat()" style="cursor:pointer">✕</span>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="bot-msg">Hi! I'm TanavBot 👋 I can help you with stress, sleep, anxiety and more. Click a topic below or type your question.</div>
+      <div class="quick-replies" id="quickReplies">
+        <button onclick="quickSend('I feel stressed')">😰 Feeling Stressed</button>
+        <button onclick="quickSend('anxiety tips')">😟 Anxiety Help</button>
+        <button onclick="quickSend('sleep tips')">😴 Sleep Tips</button>
+        <button onclick="quickSend('exam stress')">📝 Exam Stress</button>
+        <button onclick="quickSend('helpline')">🆘 Helpline Numbers</button>
+        <button onclick="quickSend('focus tips')">🎯 Focus Tips</button>
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // Progress bar
+    function updateProgress() {
+      const inputs = document.querySelectorAll('#mainForm input[required], #mainForm select[required]');
+      let filled = 0;
+      inputs.forEach(i => { if (i.value !== '') filled++; });
+      const pct = Math.round((filled / inputs.length) * 100);
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent =
+        pct === 100 ? 'All done! Ready to submit ✅' : `${filled} of ${inputs.length} fields filled`;
+    }
+
+    document.querySelectorAll('#mainForm input, #mainForm select').forEach(el => {
+      el.addEventListener('input', updateProgress);
+      el.addEventListener('change', updateProgress);
+    });
+
+    // Loading spinner
+    document.getElementById('mainForm').addEventListener('submit', function() {
+      document.getElementById('btnText').style.display = 'none';
+      document.getElementById('btnSpinner').style.display = 'inline';
+      document.getElementById('submitBtn').disabled = true;
+    });
+
+    // Typewriter effect for HTML content
+    function typewriterHTML(el, html, speed = 8) {
+      return new Promise(resolve => {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const fullText = temp.innerHTML;
+        let i = 0;
+        el.innerHTML = '';
+        // Skip tag characters instantly, animate visible text chars only
+        function nextChar() {
+          if (i >= fullText.length) { resolve(); return; }
+          // If we hit a tag, jump to end of tag
+          if (fullText[i] === '<') {
+            const close = fullText.indexOf('>', i);
+            el.innerHTML = fullText.substring(0, close + 1);
+            i = close + 1;
+            setTimeout(nextChar, 1);
+          } else {
+            i++;
+            el.innerHTML = fullText.substring(0, i);
+            el.parentElement.scrollTop = el.parentElement.scrollHeight;
+            setTimeout(nextChar, speed);
+          }
+        }
+        nextChar();
+      });
+    }
+
+    // Chatbot
+    function toggleChat() {
+      const box = document.getElementById('chatBox');
+      const hint = document.querySelector('.chat-hint');
+      const bubble = document.querySelector('.chat-bubble');
+      const open = box.style.display === 'flex';
+      box.style.display = open ? 'none' : 'flex';
+      hint.style.display = open ? 'block' : 'none';
+      bubble.style.display = open ? 'flex' : 'none';
+    }
+
+    function quickSend(msg) {
+      document.getElementById('quickReplies').style.display = 'none';
+      sendMsgText(msg);
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById('chatInput');
+      sendMsgText(input.value.trim());
+      input.value = '';
+    }
+
+    async function sendMsgText(msg) {
+      if (!msg) return;
+      document.getElementById('quickReplies').style.display = 'none';
+      const msgs = document.getElementById('chatMessages');
+      msgs.innerHTML += `<div class="user-msg">${msg}</div>`;
+      msgs.innerHTML += `<div class="bot-msg typing">...</div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: msg})
+      });
+      const data = await res.json();
+      document.querySelector('.typing').remove();
+
+      let replyHtml, showQuick = false;
+      if (data.reply.startsWith('SHOW_QUICK|')) {
+        replyHtml = data.reply.replace('SHOW_QUICK|', '');
+        showQuick = true;
+      } else {
+        replyHtml = data.reply;
+      }
+
+      // Create bot message bubble and typewriter-reveal it
+      const bubble = document.createElement('div');
+      bubble.className = 'bot-msg';
+      msgs.appendChild(bubble);
+      await typewriterHTML(bubble, replyHtml);
+
+      if (showQuick) {
+        const qr = document.getElementById('quickReplies');
+        const newQR = qr.cloneNode(true);
+        newQR.removeAttribute('id');
+        newQR.style.display = 'flex';
+        msgs.appendChild(newQR);
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  </script>
+</body>
+</html>

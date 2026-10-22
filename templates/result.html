@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Result - TanavDrishti</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav>
+  <span class="logo"><a href="/">TanavDrishti</a></span>
+    <div class="nav-right">
+      <a href="/trend">Weekly Trend</a>
+
+
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="result-card">
+      <h2>Your Mental Health Risk Level</h2>
+      <div class="risk-badge {{ color }}">{{ risk }} RISK</div>
+
+      {% if color == 'red' %}
+      <div class="helpline-box">
+        🆘 <strong>Tele-MANAS: 14416</strong> - Free, 24x7, Government of India<br>
+        📞 iCall: 9152987821 &nbsp;|&nbsp; Vandrevala: 1860-2662-345
+      </div>
+      {% endif %}
+
+      <!-- Input Chart -->
+      <h3>Your Input Breakdown</h3>
+      <div class="chart-wrap small">
+        <canvas id="inputChart"></canvas>
+      </div>
+
+      <h3>Personalized Suggestions</h3>
+      <ul class="suggestions">
+        {% for s in suggestions %}
+        <li>{{ s }}</li>
+        {% endfor %}
+      </ul>
+
+      <!-- PDF Download -->
+      <div class="actions">
+        <a href="/" class="btn">Check Again</a>
+        <a href="/trend" class="btn outline">Weekly Trend</a>
+        <button onclick="window.print()" class="btn outline">🖨️ Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chatbot with risk context -->
+  <div class="chat-hint">💬 Get personalized tips from TanavBot</div>
+  <div class="chat-bubble" onclick="toggleChat()">💬</div>
+  <div class="chat-box" id="chatBox">
+    <div class="chat-header">
+      <span>🤖 TanavBot</span>
+      <span onclick="toggleChat()" style="cursor:pointer">✕</span>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="bot-msg">
+        Your risk level is <strong>{{ risk }}</strong>.
+        {% if color == 'green' %}
+        Great job! Ask me tips to maintain your well-being.
+        {% elif color == 'orange' %}
+        Let's work on improving. Click a topic or ask me anything.
+        {% else %}
+        Please don't ignore this. I'm here to help. You can also call Tele-MANAS: 14416.
+        {% endif %}
+      </div>
+      <div class="quick-replies" id="quickReplies">
+        {% if color == 'red' %}
+        <button onclick="quickSend('I feel depressed')">😔 Feeling Depressed</button>
+        <button onclick="quickSend('panic attack')">😰 Panic Attack</button>
+        <button onclick="quickSend('helpline')">🆘 Helplines</button>
+        {% elif color == 'orange' %}
+        <button onclick="quickSend('study tips')">📚 Study Tips</button>
+        <button onclick="quickSend('I feel stressed')">😰 Stress Relief</button>
+        <button onclick="quickSend('sleep tips')">😴 Sleep Better</button>
+        {% else %}
+        <button onclick="quickSend('maintain mental health')">💚 Stay Healthy</button>
+        <button onclick="quickSend('focus tips')">🎯 Stay Focused</button>
+        <button onclick="quickSend('exam stress')">📝 Exam Tips</button>
+        {% endif %}
+        <button onclick="quickSend('helpline')">🆘 Helplines</button>
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter') sendMsg()">
+      <button onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // Input breakdown chart
+    const ctx = document.getElementById('inputChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Sleep','Study','Social Media','Physical','Attendance%','Acad Pressure','Fin Stress','Social Int'],
+        datasets: [{
+          label: 'Your Values',
+          data: {{ inputs | tojson }},
+          backgroundColor: [
+            '#74C69D','#52B788','#40916C','#2D6A4F',
+            '#1B4332','#95D5B2','#B7E4C7','#D8F3DC'
+          ],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            ticks: {
+              font: { size: 9 },
+              maxRotation: 45,
+              minRotation: 30
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { font: { size: 10 } }
+          }
+        }
+      }
+    });
+
+    // Typewriter effect for HTML content
+    function typewriterHTML(el, html, speed = 8) {
+      return new Promise(resolve => {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const fullText = temp.innerHTML;
+        let i = 0;
+        el.innerHTML = '';
+        function nextChar() {
+          if (i >= fullText.length) { resolve(); return; }
+          if (fullText[i] === '<') {
+            const close = fullText.indexOf('>', i);
+            el.innerHTML = fullText.substring(0, close + 1);
+            i = close + 1;
+            setTimeout(nextChar, 1);
+          } else {
+            i++;
+            el.innerHTML = fullText.substring(0, i);
+            el.parentElement.scrollTop = el.parentElement.scrollHeight;
+            setTimeout(nextChar, speed);
+          }
+        }
+        nextChar();
+      });
+    }
+
+    function toggleChat() {
+      const box = document.getElementById('chatBox');
+      const hint = document.querySelector('.chat-hint');
+      const bubble = document.querySelector('.chat-bubble');
+      const open = box.style.display === 'flex';
+      box.style.display = open ? 'none' : 'flex';
+      hint.style.display = open ? 'block' : 'none';
+      bubble.style.display = open ? 'flex' : 'none';
+    }
+
+    function quickSend(msg) {
+      document.getElementById('quickReplies').style.display = 'none';
+      sendMsgText(msg);
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById('chatInput');
+      sendMsgText(input.value.trim());
+      input.value = '';
+    }
+
+    async function sendMsgText(msg) {
+      if (!msg) return;
+      document.getElementById('quickReplies').style.display = 'none';
+      const msgs = document.getElementById('chatMessages');
+      msgs.innerHTML += `<div class="user-msg">${msg}</div>`;
+      msgs.innerHTML += `<div class="bot-msg typing">...</div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: msg})
+      });
+      const data = await res.json();
+      document.querySelector('.typing').remove();
+
+      let replyHtml, showQuick = false;
+      if (data.reply.startsWith('SHOW_QUICK|')) {
+        replyHtml = data.reply.replace('SHOW_QUICK|', '');
+        showQuick = true;
+      } else {
+        replyHtml = data.reply;
+      }
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bot-msg';
+      msgs.appendChild(bubble);
+      await typewriterHTML(bubble, replyHtml);
+
+      if (showQuick) {
+        const qr = document.getElementById('quickReplies');
+        const newQR = qr.cloneNode(true);
+        newQR.removeAttribute('id');
+        newQR.style.display = 'flex';
+        msgs.appendChild(newQR);
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+  </script>
+</body>
+</html>
