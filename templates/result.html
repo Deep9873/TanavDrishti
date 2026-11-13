@@ -2,15 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Result - TanavDrishti</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <nav>
-  <span class="logo"><a href="/">TanavDrishti</a></span>
+    <a href="/" class="nav-logo">
+      <div class="logo-icon">🧠</div>
+      <span class="logo-text">Tanav<span>Drishti</span></span>
+    </a>
     <div class="nav-right">
-      <a href="/trend">Weekly Trend</a>
+      <a href="/trend" class="nav-link">📈 Weekly Trend</a>
 
 
     </div>
@@ -159,10 +163,16 @@
       const box = document.getElementById('chatBox');
       const hint = document.querySelector('.chat-hint');
       const bubble = document.querySelector('.chat-bubble');
-      const open = box.style.display === 'flex';
-      box.style.display = open ? 'none' : 'flex';
-      hint.style.display = open ? 'block' : 'none';
-      bubble.style.display = open ? 'flex' : 'none';
+      const open = box.classList.contains('open');
+      if (open) {
+        box.classList.remove('open');
+        hint.style.display = 'block';
+        bubble.style.display = 'flex';
+      } else {
+        box.classList.add('open');
+        hint.style.display = 'none';
+        bubble.style.display = 'none';
+      }
     }
 
     function quickSend(msg) {

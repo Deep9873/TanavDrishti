@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 import joblib
 import sqlite3
 import os
+import uuid
 from datetime import datetime
 from chatbot.responses import get_response
 
 app = Flask(__name__)
+app.secret_key = 'tanavdrishti-secret-2024'
  
 # Load model
 data = joblib.load('model/model.pkl') 
@@ -56,28 +58,42 @@ def init_db():
         social_int INTEGER,
         gender INTEGER,
         risk_level INTEGER,
-        risk_label TEXT
+        risk_label TEXT,
+        session_id TEXT
     )''')
+    # Migration: add session_id column if old DB doesn't have it
+    try:
+        conn.execute('ALTER TABLE checkins ADD COLUMN session_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
+def get_session_id():
+    if 'uid' not in session:
+        session['uid'] = str(uuid.uuid4())
+    return session['uid']
+
 def save_checkin(inputs, risk):
+    uid = get_session_id()
     conn = sqlite3.connect('database/checkins.db')
     conn.execute('''INSERT INTO checkins 
         (date, sleep, study, social_media, physical, attendance,
-         acad_pressure, fin_stress, social_int, gender, risk_level, risk_label)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)''',
+         acad_pressure, fin_stress, social_int, gender, risk_level, risk_label, session_id)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
         (datetime.now().strftime('%Y-%m-%d'),
          inputs[0], inputs[1], inputs[2], inputs[3], inputs[4],
          inputs[5], inputs[6], inputs[7], inputs[8],
-         risk, RISK[risk]))
+         risk, RISK[risk], uid))
     conn.commit()
     conn.close()
 
 def get_trend():
+    uid = get_session_id()
     conn = sqlite3.connect('database/checkins.db')
     rows = conn.execute(
-        'SELECT date, risk_level FROM checkins ORDER BY id DESC LIMIT 7'
+        'SELECT date, risk_level FROM checkins WHERE session_id=? ORDER BY id DESC LIMIT 7',
+        (uid,)
     ).fetchall()
     conn.close()
     rows.reverse()

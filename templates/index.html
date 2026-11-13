@@ -8,10 +8,12 @@
 </head>
 <body>
   <nav>
-    <span class="logo"><a href="/">TanavDrishti</a></span>
+    <a href="/" class="nav-logo">
+      <div class="logo-icon">🧠</div>
+      <span class="logo-text">Tanav<span>Drishti</span></span>
+    </a>
     <div class="nav-right">
-      <a href="/trend">Weekly Trend</a>
-
+      <a href="/trend" class="nav-link">📈 Weekly Trend</a>
     </div>
   </nav>
 
@@ -175,10 +177,18 @@
       const box = document.getElementById('chatBox');
       const hint = document.querySelector('.chat-hint');
       const bubble = document.querySelector('.chat-bubble');
-      const open = box.style.display === 'flex';
-      box.style.display = open ? 'none' : 'flex';
-      hint.style.display = open ? 'block' : 'none';
-      bubble.style.display = open ? 'flex' : 'none';
+      const open = box.classList.contains('open');
+      if (open) {
+        box.classList.remove('open');
+        box.style.display = 'none';
+        hint.style.display = 'block';
+        bubble.style.display = 'flex';
+      } else {
+        box.classList.add('open');
+        box.style.display = 'flex';
+        hint.style.display = 'none';
+        bubble.style.display = 'none';
+      }
     }
 
     function quickSend(msg) {
