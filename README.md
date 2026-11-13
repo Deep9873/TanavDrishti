@@ -36,7 +36,7 @@ Follow these instructions to set up and run the project locally on your machine.
 
 1. **Clone the repository:**
 ```bash
-git clone [https://github.com/Deep9873/TanavDrishti.git](https://github.com/Deep9873/TanavDrishti.git)
+git clone https://github.com/Deep9873/TanavDrishti.git
 cd TanavDrishti
 
 ```
@@ -66,12 +66,3 @@ python app.py
 * **Frontend:** HTML5, CSS3, JavaScript
 * **Database:** SQLite / SQLAlchemy (or your configured database)
 * **Machine Learning / AI:** Custom models for chatbot interaction and analysis
-
----
-
-## 👤 Author
-
-* **Deep Jangid** ([Deep9873](https://github.com/Deep9873))
-
-```
-
